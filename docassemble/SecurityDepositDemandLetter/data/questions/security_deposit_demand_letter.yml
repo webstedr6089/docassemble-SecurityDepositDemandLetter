@@ -1,0 +1,407 @@
+---
+include:
+  - docassemble.AssemblyLine:assembly_line.yml
+  - docassemble.ALAnyState:any_state.yml
+---
+metadata:
+  title: >-
+    Security Deposit Demand Letter
+  short title: >-
+    Security Deposit Letter
+  description: |-
+    This interview helps Minnesotans create a security deposit demand letter.
+  tags:
+    - "HO-06-00-00-00"
+    - "MO-10-00-00-00"
+  authors:
+    - name: Devin Webster
+      organization: Suffolk University Law School
+  original_form:
+    - https://www.lawhelpmn.org/sites/default/files/2018-11/Security%20Deposit%20Demand%20Letter.pdf
+  help_page_url: >-
+    https://www.lawhelpmn.org/self-help-library/legal-resource/security-deposit-demand-letter-do-it-yourself
+  help_page_title: >-
+    LawHelpMN Security Deposit Demand Letter
+  allowed_courts: []
+  typical_role: "plaintiff"
+  al_weaver_version: "1.10.3"
+  generated_on: "2023-11-17"
+---
+code: |
+  # This controls the default country and list of states in address field questions
+  AL_DEFAULT_COUNTRY = "US"
+---
+code: |
+  # This controls the default state in address field questions
+  AL_DEFAULT_STATE = "MN"
+---
+code: |
+  github_repo_name =  'docassemble-SecurityDepositDemandLetter'
+---
+code: |
+  interview_short_title = "Create a security deposit demand letter"
+---
+code: |
+  al_form_type = "letter" 
+---
+objects:
+  - users: ALPeopleList.using(ask_number=True,target_number=1)
+  - other_parties: ALPeopleList.using(ask_number=True,target_number=1)
+---
+sections:
+  - review_security_deposit_demand_letter: Review your answers
+---
+#################### Interview order #####################
+comment: |
+  Controls order and branching logic for questions specific to this form
+id: interview_order_security_deposit_demand_letter
+code: |
+  # Set the allowed courts for this interview
+  nav.set_section("review_security_deposit_demand_letter")
+  user_role = "plaintiff"
+  user_ask_role = "plaintiff"
+  users.gather()
+  set_parts(subtitle=str(users))
+  users[0].mailing_address.address
+  set_progress(20)
+  rental_screen_intro
+  users[0].address.address
+  move_in_date
+  move_out_date
+  if (today() - move_out_date).days < 21 : 
+    exit_screen_date_too_soon
+  security_deposit_amount
+  other_parties.gather()
+  set_progress(40)
+  other_parties[0].address.address
+  security_deposit_demand_letter_preview_question
+  basic_questions_signature_flow
+  signature_date
+  interview_order_security_deposit_demand_letter = True
+---
+###################### Main order ######################
+comment: |
+  This block includes the logic for standalone interviews.
+  Delete mandatory: True to include in another interview
+mandatory: True
+code: |
+  al_intro_screen
+  security_deposit_demand_letter_intro
+  interview_order_security_deposit_demand_letter
+  signature_date
+  # Store anonymous data for analytics / statistics
+  store_variables_snapshot(
+      persistent=True,
+      data={
+          "zip": showifdef("users[0].address.zip"),
+          "reached_interview_end": True,
+      },
+  )
+  security_deposit_demand_letter_download
+---
+comment: |
+  This question is used to introduce your interview. Please customize
+id: Security_deposit_demand_letter
+continue button field: security_deposit_demand_letter_intro
+question: |
+  **Security Deposit Demand Letter**
+subquestion: |
+  This interview will help a Minnesotan create a security deposit demand letter.
+  
+  Before you get started, gather:
+  
+  1. Your name and current address,
+  2. Your landlord's name and current address, 
+  3. The address of the place you rented from the landlord, 
+  4. The amount of the deposit,
+  5. The date you gave your landlord the deposit, and
+  6. The exact date your lease ended.
+  
+  When you are finished, you will need to:
+  
+  1. Print two copies of the letter and save one for yourself, 
+  2. Mail the letter to your landlord.
+  
+  Most people take about 20 minutes to finish this interview. For more information about your rights as a tenant, visit [LawHelp MN](https://www.lawhelpmn.org/self-help-library/fact-sheet/security-deposits).
+---
+id: your name
+sets:
+    - users[0].name.first
+    - users[0].name.last
+    - users[0].name.middle
+    - users[0].name.suffix
+question:  |
+  Enter your name.
+fields:
+  - code: |
+      users[0].name_fields()
+---
+id: your mailing address
+question: |
+  Enter your mailing address.
+subquestion: |
+  **NOTE:** Make sure you provided your landlord with your mailing address.
+fields:
+  - My mailing address is: users[0].mailing_address
+    datatype: object_radio
+    choices:
+      - users[0].address if defined("users[0].address.address") else None
+    object labeler: |
+      lambda y: y.on_one_line()
+    none of the above: |
+      Somewhere else
+    disable others: True      
+    show if:
+      code: |
+        defined("users[0].address.address")
+  - ${ users[0].address.address_label}: users[0].mailing_address.address
+    address autocomplete: True
+  - ${ users[0].address.unit_label}: users[0].mailing_address.unit
+    required: False
+  - ${ users[0].address.city_label}: users[0].mailing_address.city
+  - ${ users[0].address.state_label}: users[0].mailing_address.state
+    code: |
+      states_list(country_code=AL_DEFAULT_COUNTRY)
+    default: ${ AL_DEFAULT_STATE }
+  - ${ users[0].address.zip_label}: users[0].mailing_address.zip
+    required: False      
+  - ${ users[0].address.country_label}: users[0].mailing_address.country
+    code: countries_list()
+    default: ${ AL_DEFAULT_COUNTRY }
+---
+id: info screen
+question: |
+  The next questions are about the rental property.
+continue button field: rental_screen_intro
+---
+id: lease address
+sets:
+  - users[0].address.address
+  - users[0].address.city
+  - users[0].address.zip
+  - users[0].address.unit
+  - users[0].address.state
+  - users[0].address.country
+question: |
+  Enter the rental address
+fields:
+  - code: |
+      users[0].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE)
+#subquestion: |
+#  % if users[0].address.state != "MN":
+#    This letter can only be used in connection with a rental property located in Minnesota.
+#  % endif
+---
+#code: |
+ #   if users[0].address.state != "MN" :
+ #   This letter can only be used in connection with a rental property located in Minnesota.
+---
+#mandatory: True
+#question : | 
+#  % if users[0].address.state != "MN":
+#    This letter can only be used in connection with a rental property located in Minnesota
+#  % endif
+---
+id: Enter the lease term
+question: |
+  Enter the lease start and end date below.
+subquestion: |
+  **NOTE:** You landlord has 21 days after the lease ends to return your safety deposit.
+fields:
+  - "Lease start date": move_in_date
+    datatype: date
+  - "Lease end date": move_out_date
+    datatype: date
+---
+question : | 
+  too early 
+event: exit_screen_date_too_soon
+---
+id: enter the deposit information
+question: |
+  Enter the amount of the safety deposit. 
+fields:
+  - "Security deposit amount": security_deposit_amount
+    datatype: currency
+    min: 0
+---
+id: name of opposing party
+sets:
+  - other_parties[i].name.first
+  - other_parties[i].name.last
+  - other_parties[i].name.middle
+  - other_parties[i].name.suffix
+question: |
+  Enter the landlord's information.
+fields:
+  - code: |
+      other_parties[i].name_fields(person_or_business='unsure')
+---
+id: preview security_deposit_demand_letter
+question: |
+  Preview your form before you sign it
+subquestion: |
+  Here is a preview of the form you will sign on the next page.   
+  
+  ${ al_recipient_bundle.as_pdf(key='preview') }
+
+  Click the image to open it in a new tab. Click the "Edit answers" button
+  to edit your answers.
+
+  ${ action_button_html(url_action('review_security_deposit_demand_letter'), label='Edit answers', color='info') }
+  
+  Remember to come back to this window to continue and sign your form.
+continue button field: security_deposit_demand_letter_preview_question    
+---
+code: |
+  signature_fields = ['users[0].signature']
+---
+id: security deposit demand letter review screen
+event: review_security_deposit_demand_letter
+question: |
+  Review your answers
+review:
+  - Edit: users.revisit
+    button: |
+      **Users**
+
+      % for item in users:
+        * ${ item }
+      % endfor
+  - Edit: other_parties.revisit
+    button: |
+      **Other parties**
+
+      % for item in other_parties:
+        * ${ item }
+      % endfor
+  - Edit: move_in_date
+    button: |
+      **Date of move in**:
+      ${ move_in_date }
+  - Edit: move_out_date
+    button: |
+      **Date of move out**:
+      ${ move_out_date }
+  - Edit: security_deposit_amount
+    button: |
+      **Security deposit amount**:
+      ${ currency(security_deposit_amount) }
+  - Edit: signature_date
+    button: |
+      **Date of signature**:
+      ${ signature_date }
+---
+continue button field: users.revisit
+question: |
+  Edit users
+subquestion: |
+  ${ users.table }
+
+  ${ users.add_action() }
+---
+table: users.table
+rows: users
+columns:
+  - Name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+  - Mailing address: |
+      row_item.mailing_address.block() if defined("row_item.mailing_address.address") else ""
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
+  - Signature: |
+      row_item.signature if defined("row_item.signature") else ""
+edit:
+  - name.first
+  - mailing_address.address
+  - address.address
+  - signature
+confirm: True
+
+---
+continue button field: other_parties.revisit
+question: |
+  Edit other_parties
+subquestion: |
+  ${ other_parties.table }
+
+  ${ other_parties.add_action() }
+---
+table: other_parties.table
+rows: other_parties
+columns:
+  - Name: |
+      row_item.name.full() if defined("row_item.name.first") else ""
+  - Address: |
+      row_item.address.block() if defined("row_item.address.address") else ""
+edit:
+  - name.first
+  - address.address
+confirm: True
+
+---
+id: download security_deposit_demand_letter
+event: security_deposit_demand_letter_download
+question: |
+  All done!
+subquestion: |
+  Thank you, ${users}. Your security deposit demand letter is ready to download and send.
+  
+  View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
+
+  ${ action_button_html(url_action('review_security_deposit_demand_letter'), label='Edit answers', color='info') }
+  
+  
+  ${ al_user_bundle.download_list_html() }
+  
+
+  ${ al_user_bundle.send_button_html(show_editable_checkbox=False) }
+
+progress: 100
+---
+# ALDocument objects specify the metadata for each template
+objects:
+  - security_deposit_demand_letter_Post_interview_instructions: ALDocument.using(title="Instructions", filename="security_deposit_demand_letter_next_steps.docx", enabled=True, has_addendum=False)
+  - security_deposit_demand_letter_attachment: ALDocument.using(title="Security deposit demand letter", filename="security_deposit_demand_letter", enabled=True, has_addendum=False, )
+---
+# Bundles group the ALDocuments into separate downloads, such as for court and for the user
+objects:
+  - al_user_bundle: ALDocumentBundle.using(elements=[security_deposit_demand_letter_Post_interview_instructions, security_deposit_demand_letter_attachment], filename="security_deposit_demand_letter", title="All forms to download for your records", enabled=True)
+  - al_recipient_bundle: ALDocumentBundle.using(elements=[security_deposit_demand_letter_attachment],  filename="security_deposit_demand_letter", title="All forms to file", enabled=True)
+---
+# Each attachment defines a key in an ALDocument. We use `i` as the placeholder here so the same template is 
+# used for "preview" and "final" keys, and logic in the template checks the value of 
+# `i` to show or hide the user's signature
+attachment:
+  name: Post-interview-Instructions
+  filename: security_deposit_demand_letter_next_steps
+  docx template file: security_deposit_demand_letter_next_steps.docx
+  variable name: security_deposit_demand_letter_Post_interview_instructions[i]
+  skip undefined: True
+  tagged pdf: True
+---
+attachment:
+  name: security deposit demand letter
+  filename: security_deposit_demand_letter
+  variable name: security_deposit_demand_letter_attachment[i]
+  skip undefined: True
+  pdf template file: security_deposit_demand_letter.pdf
+  fields:
+      - "users1_name": ${ users[0] }
+      - "other_parties_name": ${ other_parties[0] }
+      - "users1_mailing_address_line_one": ${ users[0].mailing_address.line_one() }
+      - "other_parties_address_line_one": ${ other_parties[0].address.line_one() }
+      - "other_parties_address_line_two": ${ other_parties[0].address.line_two() }
+      - "users1_mailing_address_line_two": ${ users[0].mailing_address.line_two() }
+      - "users1_name_": ${ users[0] }
+      - "move_out_date": ${ move_out_date.format('MMMM dd') }
+      - "move_out_year": ${ move_out_date.format('yy') }
+      - "users1_address_on_one_line": ${ users[0].address.on_one_line() }
+      - "security_deposit_amount": ${ currency(security_deposit_amount) }
+      - "total_deposit_amount": ${ currency(int(security_deposit_amount + security_deposit_amount * .01 / 12 * (move_out_date - move_in_date).days / 30.5)) }
+      - "minimum_penalty_amount": ${ currency(int(security_deposit_amount + security_deposit_amount * .01 / 12 * (move_out_date - move_in_date).days / 30.5) * 2) }
+      - "maximum_penalty_amount": ${ currency(int(security_deposit_amount + security_deposit_amount * .01 / 12 * (move_out_date - move_in_date).days / 30.5) * 2 + 500) }
+      #- "users1_signature": ${ users[0].signature }
+      - "users1_signature": ${ users[0].signature_if_final(i) }
+      - "signature_date": ${ signature_date }
+      - "users1_name__": ${ users[0]}
