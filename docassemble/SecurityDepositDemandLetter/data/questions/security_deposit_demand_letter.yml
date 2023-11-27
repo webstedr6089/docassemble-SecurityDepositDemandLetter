@@ -9,7 +9,7 @@ metadata:
   short title: >-
     Security Deposit Letter
   description: |-
-    This interview helps Minnesotans create a security deposit demand letter.
+    This interview guides Minnesotans in creating a security deposit demand letter.
   tags:
     - "HO-06-00-00-00"
     - "MO-10-00-00-00"
@@ -64,7 +64,10 @@ code: |
   set_parts(subtitle=str(users))
   users[0].mailing_address.address
   set_progress(20)
-  rental_screen_intro
+  provided_landlord_address
+  if not provided_landlord_address:
+    exit_screen_not_provided_landlord_address
+  #rental_screen_intro
   users[0].address.address
   move_in_date
   move_out_date
@@ -106,20 +109,20 @@ continue button field: security_deposit_demand_letter_intro
 question: |
   **Security Deposit Demand Letter**
 subquestion: |
-  This interview will help a Minnesotan create a security deposit demand letter.
+  This interview will guide you through the process of creating a security deposit demand letter.
   
   Before you get started, gather:
   
-  1. Your name and current address,
-  2. Your landlord's name and current address, 
-  3. The address of the place you rented from the landlord, 
-  4. The amount of the deposit,
-  5. The date you gave your landlord the deposit, and
+  1. Your full name and current address
+  2. Your landlord's full name and current address 
+  3. The exact address of the house or apartment you rented
+  4. The amount of your security deposit
+  5. The date you paid the security deposit to your landlord
   6. The exact date your lease ended.
   
-  When you are finished, you will need to:
+  Once you are done:
   
-  1. Print two copies of the letter and save one for yourself, 
+  1. Print two copies of the letter. Keep one for yourself. 
   2. Mail the letter to your landlord.
   
   Most people take about 20 minutes to finish this interview. For more information about your rights as a tenant, visit [LawHelp MN](https://www.lawhelpmn.org/self-help-library/fact-sheet/security-deposits).
@@ -131,16 +134,14 @@ sets:
     - users[0].name.middle
     - users[0].name.suffix
 question:  |
-  Enter your name.
+  Your name
 fields:
   - code: |
       users[0].name_fields()
 ---
 id: your mailing address
 question: |
-  Enter your mailing address.
-subquestion: |
-  **NOTE:** Make sure you provided your landlord with your mailing address.
+  What is your current address?
 fields:
   - My mailing address is: users[0].mailing_address
     datatype: object_radio
@@ -169,6 +170,18 @@ fields:
     code: countries_list()
     default: ${ AL_DEFAULT_COUNTRY }
 ---
+id: provide landlord address
+question: |
+  Did you give your landlord your current address?
+yesno: provided_landlord_address
+---
+question: | 
+  Make sure your landlord has your new address before you send them a security deposit demand letter. 
+buttons:
+  - Exit: exit
+  - Try again: restart
+event: exit_screen_not_provided_landlord_address
+---
 id: info screen
 question: |
   The next questions are about the rental property.
@@ -183,28 +196,14 @@ sets:
   - users[0].address.state
   - users[0].address.country
 question: |
-  Enter the rental address
+  What is the address of the house or apartment you rented?
 fields:
   - code: |
       users[0].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE)
-#subquestion: |
-#  % if users[0].address.state != "MN":
-#    This letter can only be used in connection with a rental property located in Minnesota.
-#  % endif
----
-#code: |
- #   if users[0].address.state != "MN" :
- #   This letter can only be used in connection with a rental property located in Minnesota.
----
-#mandatory: True
-#question : | 
-#  % if users[0].address.state != "MN":
-#    This letter can only be used in connection with a rental property located in Minnesota
-#  % endif
 ---
 id: Enter the lease term
 question: |
-  Enter the lease start and end date below.
+  How long was the lease? Use the exact start and end date.  
 subquestion: |
   **NOTE:** You landlord has 21 days after the lease ends to return your safety deposit.
 fields:
@@ -213,13 +212,16 @@ fields:
   - "Lease end date": move_out_date
     datatype: date
 ---
-question : | 
-  too early 
+question: | 
+  Your landlord has 21 days to return your security deposit after your lease ends. Allow your landlord the full 21 days before creating a security deposit demand letter.
+buttons:
+  - Exit: exit
+  - Restart: restart
 event: exit_screen_date_too_soon
 ---
 id: enter the deposit information
 question: |
-  Enter the amount of the safety deposit. 
+  How much was the security deposit? 
 fields:
   - "Security deposit amount": security_deposit_amount
     datatype: currency
@@ -232,16 +234,16 @@ sets:
   - other_parties[i].name.middle
   - other_parties[i].name.suffix
 question: |
-  Enter the landlord's information.
+  Your landlord's information
 fields:
   - code: |
       other_parties[i].name_fields(person_or_business='unsure')
 ---
 id: preview security_deposit_demand_letter
 question: |
-  Preview your form before you sign it
+  Preview your letter
 subquestion: |
-  Here is a preview of the form you will sign on the next page.   
+  Here is a preview of the letter you will sign on the next page.   
   
   ${ al_recipient_bundle.as_pdf(key='preview') }
 
@@ -250,7 +252,7 @@ subquestion: |
 
   ${ action_button_html(url_action('review_security_deposit_demand_letter'), label='Edit answers', color='info') }
   
-  Remember to come back to this window to continue and sign your form.
+  Remember to come back to this window to complete and sign your form.
 continue button field: security_deposit_demand_letter_preview_question    
 ---
 code: |
@@ -270,18 +272,18 @@ review:
       % endfor
   - Edit: other_parties.revisit
     button: |
-      **Other parties**
+      **Your landlord's name**
 
       % for item in other_parties:
         * ${ item }
       % endfor
   - Edit: move_in_date
     button: |
-      **Date of move in**:
+      **Lease start date**:
       ${ move_in_date }
   - Edit: move_out_date
     button: |
-      **Date of move out**:
+      **Lease end date**:
       ${ move_out_date }
   - Edit: security_deposit_amount
     button: |
@@ -317,11 +319,10 @@ edit:
   - address.address
   - signature
 confirm: True
-
 ---
 continue button field: other_parties.revisit
 question: |
-  Edit other_parties
+  Edit your landlord's information
 subquestion: |
   ${ other_parties.table }
 
@@ -343,9 +344,9 @@ confirm: True
 id: download security_deposit_demand_letter
 event: security_deposit_demand_letter_download
 question: |
-  All done!
+  Interview complete
 subquestion: |
-  Thank you, ${users}. Your security deposit demand letter is ready to download and send.
+  Great work, ${users}! Your security deposit demand letter is ready to download and send.
   
   View, download and send your form below. Click the "Edit answers" button to fix any mistakes.
 
@@ -401,7 +402,6 @@ attachment:
       - "total_deposit_amount": ${ currency(int(security_deposit_amount + security_deposit_amount * .01 / 12 * (move_out_date - move_in_date).days / 30.5)) }
       - "minimum_penalty_amount": ${ currency(int(security_deposit_amount + security_deposit_amount * .01 / 12 * (move_out_date - move_in_date).days / 30.5) * 2) }
       - "maximum_penalty_amount": ${ currency(int(security_deposit_amount + security_deposit_amount * .01 / 12 * (move_out_date - move_in_date).days / 30.5) * 2 + 500) }
-      #- "users1_signature": ${ users[0].signature }
       - "users1_signature": ${ users[0].signature_if_final(i) }
       - "signature_date": ${ signature_date }
       - "users1_name__": ${ users[0]}
