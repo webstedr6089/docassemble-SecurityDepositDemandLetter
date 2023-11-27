@@ -203,9 +203,7 @@ fields:
 ---
 id: Enter the lease term
 question: |
-  How long was the lease? Use the exact start and end date.  
-subquestion: |
-  **NOTE:** You landlord has 21 days after the lease ends to return your safety deposit.
+  How long was the lease?
 fields:
   - "Lease start date": move_in_date
     datatype: date
@@ -243,7 +241,7 @@ id: preview security_deposit_demand_letter
 question: |
   Preview your letter
 subquestion: |
-  Here is a preview of the letter you will sign on the next page.   
+  Almost done, ${users}! Here is a preview of the letter you will sign on the next page.   
   
   ${ al_recipient_bundle.as_pdf(key='preview') }
 
@@ -265,14 +263,14 @@ question: |
 review:
   - Edit: users.revisit
     button: |
-      **Users**
+      **Your information
 
       % for item in users:
         * ${ item }
       % endfor
   - Edit: other_parties.revisit
     button: |
-      **Your landlord's name**
+      **Your landlord's information**
 
       % for item in other_parties:
         * ${ item }
