@@ -54,7 +54,7 @@ setup(name='docassemble.SecurityDepositDemandLetter',
       url='https://courtformsonline.org',
       packages=find_packages(),
       namespace_packages=['docassemble'],
-      install_requires=['docassemble.ALAnyState>=0.1.0', 'docassemble.AssemblyLine>=2.26.0'],
+      install_requires=['docassemble.ALAnyState>=0.1.0', 'docassemble.AssemblyLine>=2.27.0'],
       zip_safe=False,
       package_data=find_package_data(where='docassemble/SecurityDepositDemandLetter/', package='docassemble.SecurityDepositDemandLetter'),
      )

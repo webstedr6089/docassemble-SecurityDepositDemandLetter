@@ -67,8 +67,9 @@ code: |
   provided_landlord_address
   if not provided_landlord_address:
     exit_screen_not_provided_landlord_address
-  #rental_screen_intro
   users[0].address.address
+  if users[0].address.state != "MN":
+    exit_screen_non_MN_rental
   move_in_date
   move_out_date
   if (today() - move_out_date).days < 21 : 
@@ -102,16 +103,20 @@ code: |
   )
   security_deposit_demand_letter_download
 ---
+images:
+  LawHelpMN_logo: LawHelpMN_Logo.png
+  stop_sign: stop_sign.png
+---
 comment: |
   This question is used to introduce your interview. Please customize
 id: Security_deposit_demand_letter
 continue button field: security_deposit_demand_letter_intro
 question: |
-  **Security Deposit Demand Letter**
+  [FILE LawHelpMN_logo, 75%] 
 subquestion: |
   This interview will guide you through the process of creating a security deposit demand letter.
   
-  Before you get started, gather:
+  **Before you get started**, gather:
   
   1. Your full name and current address
   2. Your landlord's full name and current address 
@@ -120,7 +125,7 @@ subquestion: |
   5. The date you paid the security deposit to your landlord
   6. The exact date your lease ended.
   
-  Once you are done:
+  **Once you are done**:
   
   1. Print two copies of the letter. Keep one for yourself. 
   2. Mail the letter to your landlord.
@@ -134,7 +139,7 @@ sets:
     - users[0].name.middle
     - users[0].name.suffix
 question:  |
-  Your name
+  What is your name?
 fields:
   - code: |
       users[0].name_fields()
@@ -180,12 +185,10 @@ question: |
 buttons:
   - Exit: exit
   - Try again: restart
+back button: True
+back button label: |
+  Go back
 event: exit_screen_not_provided_landlord_address
----
-id: info screen
-question: |
-  The next questions are about the rental property.
-continue button field: rental_screen_intro
 ---
 id: lease address
 sets:
@@ -201,6 +204,20 @@ fields:
   - code: |
       users[0].address_fields(country_code=AL_DEFAULT_COUNTRY, default_state=AL_DEFAULT_STATE)
 ---
+question: |
+  *Invalid Rental Address*
+subquestion: |
+  The rental address you provided is not located in Minnesota. Unfortunately, we can only help with rental issues within the state. If you need assistance with a rental that is located outside of Minnesota, legal services can be found [here](https://www.findlaw.com/realestate/landlord-tenant-law/get-legal-help-with-a-tenants-rights-issue.html). 
+buttons:
+  - Exit: exit
+  - Try again: restart
+action buttons:
+  - label: Find legal help
+    action: https://www.findlaw.com/realestate/landlord-tenant-law/get-legal-help-with-a-tenants-rights-issue.html
+    color: warning
+    icon: sign-out-alt
+event: exit_screen_non_MN_rental
+---
 id: Enter the lease term
 question: |
   How long was the lease?
@@ -211,10 +228,12 @@ fields:
     datatype: date
 ---
 question: | 
-  Your landlord has 21 days to return your security deposit after your lease ends. Allow your landlord the full 21 days before creating a security deposit demand letter.
+  Your landlord has 21 days to return your security deposit after your lease ends.
+subquestion: |
+  Allow your landlord the full 21 days before creating a security deposit demand letter.
 buttons:
   - Exit: exit
-  - Restart: restart
+  - Try again: restart
 event: exit_screen_date_too_soon
 ---
 id: enter the deposit information
@@ -232,10 +251,15 @@ sets:
   - other_parties[i].name.middle
   - other_parties[i].name.suffix
 question: |
-  Your landlord's information
+ Is your landlord a person or business?
 fields:
   - code: |
       other_parties[i].name_fields(person_or_business='unsure')
+---    
+generic object: ALIndividual
+template: x.person_type_label
+content: |
+
 ---
 id: preview security_deposit_demand_letter
 question: |
