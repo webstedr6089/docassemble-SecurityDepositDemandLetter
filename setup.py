@@ -46,7 +46,7 @@ def find_package_data(where='.', package='', exclude=standard_exclude, exclude_d
 setup(name='docassemble.SecurityDepositDemandLetter',
       version='1.0',
       description=('Security deposit demand letter'),
-      long_description='# docassemble.SecurityDepositDemandLetter\r\n\r\nSecurity deposit demand letter\r\n\r\n## Author\r\n\r\nDevin Webster\r\n\r\n',
+      long_description='# docassemble.SecurityDepositDemandLetter\r\n\r\nSecurity deposit demand letter interview created for LawHelpMN as a final project for the Suffolk Law course LAW-2156. \r\n\r\n## Author\r\n\r\nDevin Webster\r\n\r\n',
       long_description_content_type='text/markdown',
       author='Devin Webster',
       author_email='Devin.Webster@su.suffolk.edu',
