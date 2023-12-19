@@ -131,7 +131,7 @@ subquestion: |
   
   Most people take about 20 minutes to finish this interview. For more information about your rights as a tenant, visit [LawHelp MN](https://www.lawhelpmn.org/self-help-library/fact-sheet/security-deposits).
 ---
-id: your name
+id: users name
 sets:
     - users[0].name.first
     - users[0].name.last
@@ -174,7 +174,7 @@ fields:
     code: countries_list()
     default: ${ AL_DEFAULT_COUNTRY }
 ---
-id: provide landlord address
+id: landlord address
 question: |
   Did you give your landlord your current address?
 yesno: provided_landlord_address
@@ -217,7 +217,7 @@ action buttons:
     icon: sign-out-alt
 event: exit_screen_non_MN_rental
 ---
-id: Enter the lease term
+id: lease term
 question: |
   How long was the lease?
 fields:
@@ -235,7 +235,7 @@ buttons:
   - Try again: restart
 event: exit_screen_date_too_soon
 ---
-id: enter the deposit information
+id: deposit information
 question: |
   How much was the security deposit? 
 fields:
@@ -243,7 +243,7 @@ fields:
     datatype: currency
     min: 0
 ---
-id: name of opposing party
+id: landlords info
 sets:
   - other_parties[i].name.first
   - other_parties[i].name.last
